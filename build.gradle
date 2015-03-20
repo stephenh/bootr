@@ -1,0 +1,45 @@
+
+apply plugin: 'java'
+apply plugin: 'maven'
+// for testing
+apply plugin: 'application'
+mainClassName = 'bootr.Bootr'
+
+group = 'com.bizo'
+version = [System.env.TRAVIS_TAG, 'SNAPSHOT'].find { it != null }
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+configurations {
+  deployerJars
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier 'sources'
+  from sourceSets.main.allSource
+}
+
+artifacts {
+  archives sourcesJar
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'org.seleniumhq.selenium:selenium-java:2.37.0'
+  compile 'org.apache.commons:commons-vfs2:2.0'
+  compile 'commons-httpclient:commons-httpclient:3.1'
+  compile 'junit:junit:4.8.1'
+  deployerJars 'org.apache.maven.wagon:wagon-ssh:2.6'
+}
+
+uploadArchives {
+  repositories.mavenDeployer {
+    configuration = configurations.deployerJars
+    repository(url: 'scp://repo.joist.ws/var/www/joist.repo') {
+      authentication(userName: System.env.REPO_USERNAME, password: System.env.REPO_PASSWORD)
+    }
+  }
+}
