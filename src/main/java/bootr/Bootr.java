@@ -2,7 +2,6 @@ package bootr;
 
 import java.io.File;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
@@ -53,15 +52,10 @@ public class Bootr {
   /** Downloads a zip archive from github to the local directory. */
   public void download() throws Exception {
     FileObject remoteZip = fs.resolveFile("https://www.github.com/" + gh.user + "/" + gh.project + "/archive/" + gh.branch + ".zip");
-    FileObject ramZip = fs.resolveFile("ram:/local.zip");
-
-    InputStream in = remoteZip.getContent().getInputStream();
-    OutputStream out = ramZip.getContent().getOutputStream();
-    IOUtils.copy(in, out);
-    IOUtils.closeQuietly(in);
-    IOUtils.closeQuietly(out);
-
-    FileObject ramZipSystem = fs.createFileSystem(ramZip);
+    FileObject ramZipCopy = fs.resolveFile("ram:/local.zip");
+    FileObjectUtils.copyContent(remoteZip, ramZipCopy);
+    // createFileSystem against a zip file basically exposes the zipped contents
+    FileObject ramZipSystem = fs.createFileSystem(ramZipCopy);
     projectDir.copyFrom(ramZipSystem.getChild(gh.project + "-" + gh.branch), new AllFileSelector());
     ramZipSystem.close();
   }

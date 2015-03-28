@@ -21,4 +21,11 @@ public class FileObjectUtils {
     out.close();
   }
 
+  public static void copyContent(FileObject from, FileObject to) throws Exception {
+    InputStream in = from.getContent().getInputStream();
+    OutputStream out = to.getContent().getOutputStream();
+    IOUtils.copy(in, out);
+    IOUtils.closeQuietly(in);
+    IOUtils.closeQuietly(out);
+  }
 }
