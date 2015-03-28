@@ -104,16 +104,9 @@ public class Bootr {
 
   public void rewriteContents() throws Exception {
     for (FileObject file : projectDir.findFiles(new FileTypeSelector(FileType.FILE))) {
-      InputStream in = file.getContent().getInputStream();
-      String contents = IOUtils.toString(in);
-      IOUtils.closeQuietly(in);
-
+      String contents = FileObjectUtils.readFromFile(file);
       String updated = replace(contents);
-
-      OutputStream out = file.getContent().getOutputStream();
-      IOUtils.write(updated, out);
-      out.close();
-      IOUtils.closeQuietly(out);
+      FileObjectUtils.writeToFile(file, updated);
     }
   }
 

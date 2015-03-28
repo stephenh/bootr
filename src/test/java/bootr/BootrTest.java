@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -59,8 +58,8 @@ public class BootrTest {
   public void downloadProjectZipFromGitHub() throws Exception {
     // given a basic project layout
     FileObject tmpDir = fs.resolveFile("ram:/tmp/");
-    writeToFile(tmpDir.resolveFile("project-master/rootFile.txt"), "1234");
-    writeToFile(tmpDir.resolveFile("project-master/dir1/dirFile.txt"), "1234");
+    FileObjectUtils.writeToFile(tmpDir.resolveFile("project-master/rootFile.txt"), "1234");
+    FileObjectUtils.writeToFile(tmpDir.resolveFile("project-master/dir1/dirFile.txt"), "1234");
 
     // that is upload to github
     FileObject zipFile = fs.resolveFile("https://www.github.com/user/project/archive/master.zip");
@@ -70,21 +69,8 @@ public class BootrTest {
     b.run();
 
     // we copied the file as is
-    assertThat(readFromFile(localDir.resolveFile("project/rootFile.txt")), is("1234"));
-    assertThat(readFromFile(localDir.resolveFile("project/dir1/dirFile.txt")), is("1234"));
-  }
-
-  private static void writeToFile(FileObject file, String content) throws Exception {
-    OutputStream out = file.getContent().getOutputStream();
-    IOUtils.write(content, out);
-    out.close();
-  }
-
-  private static String readFromFile(FileObject file) throws Exception {
-    InputStream in = file.getContent().getInputStream();
-    String content = IOUtils.toString(in);
-    in.close();
-    return content;
+    assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/rootFile.txt")), is("1234"));
+    assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/dir1/dirFile.txt")), is("1234"));
   }
 
   private static void writeToZipFile(FileObject zipFile, FileObject source) throws Exception {
