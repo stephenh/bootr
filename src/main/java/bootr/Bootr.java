@@ -10,6 +10,7 @@ import org.apache.commons.vfs2.AllFileSelector;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.FileTypeSelector;
 import org.apache.commons.vfs2.VFS;
 
 public class Bootr {
@@ -43,7 +44,7 @@ public class Bootr {
     rewritePaths();
     rewriteContents();
   }
-  
+
   public void nukeExisting() throws Exception {
     projectDir.delete(new AllFileSelector());
     projectDir.createFolder();
@@ -102,19 +103,17 @@ public class Bootr {
   }
 
   public void rewriteContents() throws Exception {
-    for (FileObject file : projectDir.findFiles(new AllFileSelector())) {
-      if (file.getType() == FileType.FILE) {
-        InputStream in = file.getContent().getInputStream();
-        String contents = IOUtils.toString(in);
-        IOUtils.closeQuietly(in);
+    for (FileObject file : projectDir.findFiles(new FileTypeSelector(FileType.FILE))) {
+      InputStream in = file.getContent().getInputStream();
+      String contents = IOUtils.toString(in);
+      IOUtils.closeQuietly(in);
 
-        String updated = replace(contents);
+      String updated = replace(contents);
 
-        OutputStream out = file.getContent().getOutputStream();
-        IOUtils.write(updated, out);
-        out.close();
-        IOUtils.closeQuietly(out);
-      }
+      OutputStream out = file.getContent().getOutputStream();
+      IOUtils.write(updated, out);
+      out.close();
+      IOUtils.closeQuietly(out);
     }
   }
 
