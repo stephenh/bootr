@@ -3,17 +3,11 @@ package bootr;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.CacheStrategy;
 import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.FileType;
-import org.apache.commons.vfs2.FileTypeSelector;
 import org.apache.commons.vfs2.cache.DefaultFilesCache;
 import org.apache.commons.vfs2.impl.DefaultFileReplicator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemManager;
@@ -63,7 +57,7 @@ public class BootrTest {
 
     // that is upload to github
     FileObject zipFile = fs.resolveFile("https://www.github.com/user/project/archive/master.zip");
-    writeToZipFile(zipFile, tmpDir);
+    FileObjectUtils.writeToZipFile(zipFile, tmpDir);
 
     // when extracted
     b.run();
@@ -71,21 +65,6 @@ public class BootrTest {
     // we copied the file as is
     assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/rootFile.txt")), is("1234"));
     assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/dir1/dirFile.txt")), is("1234"));
-  }
-
-  private static void writeToZipFile(FileObject zipFile, FileObject source) throws Exception {
-    zipFile.createFile();
-    ZipOutputStream zos = new ZipOutputStream(zipFile.getContent().getOutputStream());
-    for (FileObject file : source.findFiles(new FileTypeSelector(FileType.FILE))) {
-      String relativeName = file.getName().toString().substring(source.getName().toString().length() + 1);
-      ZipEntry zipEntry = new ZipEntry(relativeName);
-      InputStream in = file.getContent().getInputStream();
-      zos.putNextEntry(zipEntry);
-      IOUtils.copy(in, zos);
-      in.close();
-    }
-    zos.close();
-    zipFile.close();
   }
 
 }
