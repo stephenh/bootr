@@ -77,7 +77,8 @@ public class Bootr {
 
   public void promptForValues() throws Exception {
     for (String name : p.stringPropertyNames()) {
-      String value = inputter.ask(name);
+      String detail = p.getProperty(name);
+      String value = inputter.ask(name, detail);
       p.setProperty(name, value);
     }
   }
