@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.apache.commons.vfs2.CacheStrategy;
 import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.FileTypeSelector;
 import org.apache.commons.vfs2.cache.DefaultFilesCache;
 import org.apache.commons.vfs2.impl.DefaultFileReplicator;
 import org.apache.commons.vfs2.impl.DefaultFileSystemManager;
@@ -44,7 +46,6 @@ public class BootrTest {
     fs.addProvider("file", new DefaultLocalFileProvider());
 
     localDir = fs.resolveFile("ram:/");
-    localDir.createFolder();
     b = new Bootr(fs, inputter, localDir, new GithubProject("user", "project", "master"));
   }
 
@@ -65,6 +66,34 @@ public class BootrTest {
     // we copied the file as is
     assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/rootFile.txt")), is("1234"));
     assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/dir1/dirFile.txt")), is("1234"));
+  }
+
+  @Test
+  public void interpolateDirectories() throws Exception {
+    FileObject tmpDir = fs.resolveFile("ram:/tmp/");
+
+    FileObjectUtils.writeToFile(tmpDir.resolveFile("project-master/.bootr"), "dir1: dir\ndir2: dir");
+    FileObjectUtils.writeToFile(tmpDir.resolveFile("project-master/__dir1__/fileA.txt"), "AA");
+    // FileObjectUtils.writeToFile(tmpDir.resolveFile("project-master/__dir2__/__dir1__/fileB.txt"), "BB");
+
+    FileObject zipFile = fs.resolveFile("https://www.github.com/user/project/archive/master.zip");
+    FileObjectUtils.writeToZipFile(zipFile, tmpDir);
+
+    config.put("dir1", "one");
+    config.put("dir2", "two");
+    b.run();
+
+    printAll(localDir);
+    assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/one/fileA.txt")), is("AA"));
+    // assertThat(FileObjectUtils.readFromFile(localDir.resolveFile("project/two/one/fileB.txt")), is("BB"));
+  }
+
+  private static void printAll(FileObject dir) throws Exception {
+    System.out.println("PRINTING " + dir.getName().toString());
+    for (FileObject file : dir.findFiles(new FileTypeSelector(FileType.FILE))) {
+      String relativeName = file.getName().toString().substring(dir.getName().toString().length());
+      System.out.println(relativeName);
+    }
   }
 
 }
